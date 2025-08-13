@@ -1,20 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 export default function Navbar() {
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const { t, i18n } = useTranslation();
 
-  // Toggle dark mode
+  const [todayDate, setTodayDate] = useState("");
+
   useEffect(() => {
     const saved = localStorage.getItem("darkMode");
     if (saved === "true") {
       setDarkMode(true);
       document.documentElement.classList.add("dark");
     }
-  }, []);
+
+    const date = new Date().toLocaleDateString(i18n.language, {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+    setTodayDate(date);
+  }, [i18n.language]);
 
   const toggleDarkMode = () => {
     if (darkMode) {
@@ -31,21 +42,36 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 w-full bg-primary-light dark:bg-primary-dark shadow-md backdrop-blur-sm bg-opacity-50 dark:bg-opacity-50 z-50">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Desktop Nav */}
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="text-xl font-bold text-text-dark dark:text-text-light">
             RehabFlow
           </Link>
 
+          {/* Language Selector + Date */}
+          <div className="hidden md:flex items-center gap-4">
+            <select
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm text-gray-800 dark:text-gray-200"
+              value={i18n.language}
+            >
+              <option value="en">English</option>
+              <option value="hi">हिंदी</option>
+              <option value="mr">मराठी</option>
+            </select>
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              {t("today")}: {todayDate}
+            </span>
+          </div>
+
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <NavLink to="/">Home</NavLink>
-            <NavLink to="/services">Services</NavLink>
-            <NavLink to="/book">Book Slot</NavLink>
-            <NavLink to="/about">About</NavLink>
-            <NavLink to="/contact">Contact</NavLink>
-            
+            <NavLink to="/">{t("home")}</NavLink>
+            <NavLink to="/services">{t("services")}</NavLink>
+            <NavLink to="/book">{t("bookSlot")}</NavLink>
+            <NavLink to="/about">{t("about")}</NavLink>
+            <NavLink to="/contact">{t("contact")}</NavLink>
+
             {/* Profile Dropdown */}
             <div className="relative">
               <button 
@@ -53,44 +79,28 @@ export default function Navbar() {
                 className="flex items-center space-x-1 focus:outline-none"
               >
                 <FaUserCircle className="text-xl text-text-dark dark:text-text-light" />
-                <span className="text-text-dark dark:text-text-light">Profile</span>
+                <span className="text-text-dark dark:text-text-light">{t("profile")}</span>
               </button>
               
               {profileDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50">
-                  <Link 
-                    to="/profile" 
-                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setProfileDropdownOpen(false)}
-                  >
-                    View Profile
+                  <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
+                    {t("viewProfile")}
                   </Link>
-                  <Link 
-                    to="/appointments" 
-                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setProfileDropdownOpen(false)}
-                  >
-                    My Appointments
+                  <Link to="/appointments" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
+                    {t("myAppointments")}
                   </Link>
-                  <Link 
-                    to="/settings" 
-                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setProfileDropdownOpen(false)}
-                  >
-                    Settings
+                  <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
+                    {t("settings")}
                   </Link>
-                  <Link 
-                    to="/logout" 
-                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setProfileDropdownOpen(false)}
-                  >
-                    Logout
+                  <Link to="/logout" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
+                    {t("logout")}
                   </Link>
                 </div>
               )}
             </div>
 
-            {/* Dark Mode Toggle - Centered with correct colors */}
+            {/* Dark Mode Toggle - your original code */}
             <button
               onClick={toggleDarkMode}
               className={`relative w-16 h-8 rounded-full flex items-center justify-center
@@ -119,6 +129,17 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
+            {/* Mobile Language Selector */}
+            <select
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-xs text-gray-800 dark:text-gray-200"
+              value={i18n.language}
+            >
+              <option value="en">EN</option>
+              <option value="hi">हि</option>
+              <option value="mr">म</option>
+            </select>
+
             {/* Mobile Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
@@ -143,7 +164,7 @@ export default function Navbar() {
                 )}
               </span>
             </button>
-            
+
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-text-dark dark:text-text-light focus:outline-none"
@@ -156,48 +177,15 @@ export default function Navbar() {
             </button>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden pb-4">
-            <div className="flex flex-col space-y-3 mt-4">
-              <MobileNavLink to="/" onClick={() => setMobileMenuOpen(false)}>Home</MobileNavLink>
-              <MobileNavLink to="/services" onClick={() => setMobileMenuOpen(false)}>Services</MobileNavLink>
-              <MobileNavLink to="/book" onClick={() => setMobileMenuOpen(false)}>Book Slot</MobileNavLink>
-              <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About</MobileNavLink>
-              <MobileNavLink to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact</MobileNavLink>
-              
-              {/* Mobile Profile Links */}
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                <MobileNavLink to="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</MobileNavLink>
-                <MobileNavLink to="/appointments" onClick={() => setMobileMenuOpen(false)}>Appointments</MobileNavLink>
-                <MobileNavLink to="/settings" onClick={() => setMobileMenuOpen(false)}>Settings</MobileNavLink>
-                <MobileNavLink to="/logout" onClick={() => setMobileMenuOpen(false)}>Logout</MobileNavLink>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );
 }
 
-// Reusable NavLink component
 const NavLink = ({ to, children }) => (
   <Link 
     to={to} 
     className="text-text-dark dark:text-text-light hover:text-primary-dark dark:hover:text-primary-light transition-colors"
-  >
-    {children}
-  </Link>
-);
-
-// Reusable MobileNavLink component
-const MobileNavLink = ({ to, children, onClick }) => (
-  <Link 
-    to={to} 
-    onClick={onClick}
-    className="block px-3 py-2 rounded-md text-base font-medium text-text-dark dark:text-text-light hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
   >
     {children}
   </Link>
