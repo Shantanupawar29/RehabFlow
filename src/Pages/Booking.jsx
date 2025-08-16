@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 
+
+
 const BookingPage = () => {
+  
   const location = useLocation();
   const [formData, setFormData] = useState({
     service: location.state?.service || '',
@@ -25,27 +28,45 @@ const BookingPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+
+  try {
+    const response = await fetch("http://localhost:5000/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to submit booking");
+    }
+
+    const data = await response.json();
+    console.log("Booking submitted:", data);
+
+    setIsSubmitting(false);
+    setSubmitSuccess(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Booking submitted:', formData);
-      setIsSubmitting(false);
-      setSubmitSuccess(true);
-      // Reset form after successful submission
-      setFormData({
-        service: '',
-        date: '',
-        time: '',
-        name: '',
-        email: '',
-        phone: '',
-        message: ''
-      });
-    }, 1500);
-  };
+
+    // Reset form
+    setFormData({
+      service: "",
+      date: "",
+      time: "",
+      name: "",
+      email: "",
+      phone: "",
+      message: ""
+    });
+
+  } catch (error) {
+    console.error("Error submitting booking:", error);
+    setIsSubmitting(false);
+    alert("Something went wrong. Please try again.");
+  }
+};
 
   const services = [
     "Therapeutic Ultrasound",

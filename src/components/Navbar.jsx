@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
-
+import AISearchBox from "./AISearchBox";
 export default function Navbar() {
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -47,7 +47,11 @@ export default function Navbar() {
           <Link to="/" className="text-xl font-bold text-text-dark dark:text-text-light">
             RehabFlow
           </Link>
-
+<div className="hidden md:block flex-1 mx-6">
+        <AISearchBox 
+  onSuggestionSelect={(suggestion) => console.log("Selected:", suggestion)} 
+/>
+      </div>
           {/* Language Selector + Date */}
           <div className="hidden md:flex items-center gap-4">
             <select

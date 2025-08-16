@@ -7,8 +7,8 @@ import App from './App.jsx'
 import "./i18n";
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>        {/* <-- Wrap App in BrowserRouter */}
+          {/* <-- Wrap App in BrowserRouter */}
       <App />
-    </BrowserRouter>
+   
   </StrictMode>,
 )
