@@ -1,40 +1,47 @@
+// backend/routes/bookings.js
 const express = require("express");
-const Booking = require("../models/Booking");
 const router = express.Router();
+const Booking = require("../models/Booking");
+const nodemailer = require("nodemailer");
 
-// CREATE booking
-router.post("/", async (req, res) => {
-    try {
-        const booking = new Booking(req.body);
-        await booking.save();
-        res.status(201).json(booking);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-});
-
-// READ all bookings
-router.get("/", async (req, res) => {
-    const bookings = await Booking.find();
-    res.json(bookings);
-});
-
-// READ single booking
-router.get("/:id", async (req, res) => {
+// Send email after deletion or confirmation
+router.post("/:id/send-email", async (req, res) => {
+  const { type } = req.body;
+  try {
     const booking = await Booking.findById(req.params.id);
-    res.json(booking);
-});
+    if (!booking) return res.status(404).send("Booking not found");
 
-// UPDATE booking
-router.put("/:id", async (req, res) => {
-    const booking = await Booking.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(booking);
-});
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
 
-// DELETE booking
-router.delete("/:id", async (req, res) => {
-    await Booking.findByIdAndDelete(req.params.id);
-    res.json({ message: "Booking deleted" });
+    let subject = "";
+    let text = "";
+
+    if (type === "deleted") {
+      subject = "Your appointment has been deleted";
+      text = `Hi ${booking.name},\n\nYour appointment for ${booking.service} on ${booking.date} has been deleted.`;
+    } else if (type === "confirmed") {
+      subject = "Your appointment is confirmed";
+      text = `Hi ${booking.name},\n\nYour appointment for ${booking.service} on ${booking.date} is confirmed.`;
+    }
+
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: booking.email,
+      subject,
+      text,
+    });
+
+    res.status(200).send("Email sent");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error sending email");
+  }
 });
 
 module.exports = router;
