@@ -26,6 +26,7 @@ ChartJS.register(
 );
 
 export default function AdminDashboard() {
+
   const [bookings, setBookings] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedServices, setSelectedServices] = useState([]);
@@ -130,17 +131,17 @@ export default function AdminDashboard() {
   }), [filteredBookings, services]);
 
   // Delete booking
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this appointment?")) return;
-    try {
-      await axios.delete(`http://localhost:5000/api/bookings/${id}`);
-      fetchBookings();
-    } catch (err) {
-      console.error("Error deleting booking:", err);
-      alert("Failed to delete appointment.");
-    }
-  };
-
+const handleDelete = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this appointment?")) return;
+  try {
+    await axios.delete(`http://localhost:5000/api/bookings/${id}`);
+    await sendBookingEmail(id, "deleted");
+    fetchBookings();
+  } catch (err) {
+    console.error("Error deleting booking:", err);
+    alert("Failed to delete appointment.");
+  }
+};
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center dark:bg-gray-800">
@@ -328,6 +329,24 @@ export default function AdminDashboard() {
                         Delete
                       </button>
                     </td>
+                    <td className="py-3 px-4">
+  {b.status === "Pending" && (
+    <button
+      onClick={() => handleConfirm(b._id)}
+      className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg mr-2 transition-transform transform hover:scale-105"
+      aria-label={`Confirm booking for ${b.name}`}
+    >
+      Confirm
+    </button>
+  )}
+  <button
+    onClick={() => handleDelete(b._id)}
+    className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-transform transform hover:scale-105"
+    aria-label={`Delete booking for ${b.name}`}
+  >
+    Delete
+  </button>
+</td>
                   </tr>
                 ))
               )}
@@ -337,4 +356,28 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
+  // Add this function to your AdminDashboard component
+const sendBookingEmail = async (bookingId, type) => {
+  try {
+    await axios.post(`http://localhost:5000/api/bookings/${bookingId}/send-email`, { type });
+  } catch (err) {
+    console.error("Error sending email:", err);
+    alert(`Failed to send ${type} email.`);
+  }
+};
+
+// Modify your handleDelete function to include email notification
+
+
+// Add this new function to handle confirmation
+const handleConfirm = async (id) => {
+  try {
+    await axios.put(`http://localhost:5000/api/bookings/${id}`, { status: "Confirmed" });
+    await sendBookingEmail(id, "confirmed");
+    fetchBookings();
+  } catch (err) {
+    console.error("Error confirming booking:", err);
+    alert("Failed to confirm appointment.");
+  }
+};
 }
