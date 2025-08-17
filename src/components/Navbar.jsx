@@ -41,7 +41,7 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-primary-light dark:bg-primary-dark shadow-md backdrop-blur-sm bg-opacity-50 dark:bg-opacity-50 z-50">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="text-xl font-bold text-text-dark dark:text-text-light">
@@ -63,13 +63,17 @@ export default function Navbar() {
               <option value="hi">हिंदी</option>
               <option value="mr">मराठी</option>
             </select>
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              {t("today")}: {todayDate}
-            </span>
+           <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+  {t("today")}: {new Date().toLocaleDateString(i18n.language, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  })}
+</span>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-6 px-1">
             <NavLink to="/">{t("home")}</NavLink>
             <NavLink to="/services">{t("services")}</NavLink>
             <NavLink to="/book">{t("bookSlot")}</NavLink>
