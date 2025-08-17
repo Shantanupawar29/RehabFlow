@@ -12,7 +12,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // MongoDB Connection (local or Atlas)
-mongoose.connect("mongodb://localhost:27017/rehabflowDB")
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
