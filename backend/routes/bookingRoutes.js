@@ -151,6 +151,21 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// PUT /api/bookings/:id/reschedule
+router.put("/:id/reschedule", async (req, res) => {
+  try {
+    const { newDate } = req.body;
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { date: newDate },
+      { new: true }
+    );
+    if (!booking) return res.status(404).json({ error: "Booking not found" });
+    res.json(booking);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Send email notification
 router.post("/:id/send-email", async (req, res) => {

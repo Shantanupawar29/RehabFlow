@@ -26,6 +26,7 @@ ChartJS.register(
 );
 
 export default function AdminDashboard() {
+  // State management
   const [bookings, setBookings] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedServices, setSelectedServices] = useState([]);
@@ -34,7 +35,13 @@ export default function AdminDashboard() {
   const [darkMode, setDarkMode] = useState(false);
   const [serviceDropdownOpen, setServiceDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [rescheduleBooking, setRescheduleBooking] = useState(null);
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState("");
 
+  // Services list
   const services = useMemo(
     () => [
       "Therapeutic Ultrasound",
@@ -47,6 +54,7 @@ export default function AdminDashboard() {
     []
   );
 
+  // Fetch bookings
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
@@ -68,6 +76,7 @@ export default function AdminDashboard() {
     }
   }, [fetchBookings]);
 
+  // Dark mode toggle
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
@@ -75,74 +84,84 @@ export default function AdminDashboard() {
     document.documentElement.classList.toggle("dark", newMode);
   };
 
+  // Email functions
   const sendBookingEmail = async (bookingId, type) => {
-  try {
-    const res = await axios.post(
-      `http://localhost:5000/api/bookings/${bookingId}/send-email`,
-      { type }
-    );
-    console.log(res.data);
-    return res.data;
-  } catch (err) {
-    console.error("Error sending email:", err.response?.data || err.message);
-    throw err;
-  }
-};
-
-
-const handleDelete = async (id) => {
-  const booking = bookings.find(b => b._id === id);
-  if (!booking) return alert("Booking not found");
-
-  if (!window.confirm("Are you sure you want to delete this appointment?")) return;
-
-  try {
-    // Send deletion email using the existing booking data
-    await sendBookingEmail(id, "deleted"); 
-
-    // Then delete booking
-    await axios.delete(`http://localhost:5000/api/bookings/${id}`);
-
-    await fetchBookings();
-    alert("Appointment deleted and email sent!");
-  } catch (err) {
-    console.error(err);
-    alert(`Failed to delete appointment: ${err.response?.data?.message || err.message}`);
-  }
-};
-
-
-  const handleConfirm = async (id) => {
     try {
-      // Update status to confirmed
-      console.log('1. Starting confirmation for booking:', id);
-       console.log('2. Sending status update request...');
-      const updateResponse = await axios.put(
-      `http://localhost:5000/api/bookings/${id}`,
-      { status: "Confirmed" }
-    );
-     console.log('3. Update response:', updateResponse.data);
-     console.log('4. Attempting to send confirmation email...');
-      // Send confirmation email
-       const emailResponse = await sendBookingEmail(id, "confirmed");
-      console.log('6. Refreshing bookings...');
-    await fetchBookings();
-    
-    console.log('7. Process completed successfully');
-    alert('Appointment confirmed and email sent!');
-      
-      // Refresh data
-    
+      const res = await axios.post(
+        `http://localhost:5000/api/bookings/${bookingId}/send-email`,
+        { type }
+      );
+      return res.data;
     } catch (err) {
-      console.error('Confirmation error:', {
-      step: err.step || 'unknown',
-      message: err.message,
-      response: err.response?.data
-    });
-    alert(`Error: ${err.response?.data?.message || err.message}`);
+      console.error("Email error:", err.response?.data || err.message);
+      throw err;
     }
   };
 
+  // Booking actions
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this appointment?")) return;
+    
+    try {
+      await sendBookingEmail(id, "deleted");
+      await axios.delete(`http://localhost:5000/api/bookings/${id}`);
+      await fetchBookings();
+      alert("Appointment deleted and email sent!");
+    } catch (err) {
+      console.error(err);
+      alert(`Failed to delete: ${err.response?.data?.message || err.message}`);
+    }
+  };
+
+  const handleConfirm = async (id) => {
+    try {
+      await axios.put(`http://localhost:5000/api/bookings/${id}`, { status: "Confirmed" });
+      await sendBookingEmail(id, "confirmed");
+      await fetchBookings();
+      alert("Appointment confirmed and email sent!");
+    } catch (err) {
+      console.error("Confirmation error:", err);
+      alert(`Error: ${err.response?.data?.message || err.message}`);
+    }
+  };
+
+  const handleReschedule = async () => {
+    if (!rescheduleBooking || !newDate || !newTime) {
+      setRescheduleError("Please select both date and time");
+      return;
+    }
+
+    try {
+      setIsRescheduling(true);
+      setRescheduleError("");
+
+      const formattedDate = new Date(newDate).toISOString().split('T')[0];
+      
+      await axios.put(
+        `http://localhost:5000/api/bookings/${rescheduleBooking._id}`,
+        { 
+          date: formattedDate, 
+          time: newTime,
+          status: "Rescheduled" 
+        }
+      );
+
+      await sendBookingEmail(rescheduleBooking._id, "rescheduled");
+      await fetchBookings();
+      
+      alert("Appointment rescheduled successfully!");
+      setRescheduleBooking(null);
+      setNewDate("");
+      setNewTime("");
+    } catch (err) {
+      console.error("Reschedule error:", err);
+      setRescheduleError(err.response?.data?.message || "Failed to reschedule");
+    } finally {
+      setIsRescheduling(false);
+    }
+  };
+
+  // Filter bookings
   const filteredBookings = useMemo(() => {
     let data = [...bookings];
 
@@ -166,6 +185,7 @@ const handleDelete = async (id) => {
     return data;
   }, [search, selectedServices, startDate, endDate, bookings]);
 
+  // Chart data
   const chartData = useMemo(
     () => ({
       labels: filteredBookings.map((b) => new Date(b.date).toLocaleDateString()),
@@ -335,7 +355,7 @@ const handleDelete = async (id) => {
                 <th className="py-3 px-4 text-left">Service</th>
                 <th className="py-3 px-4 text-left">Date</th>
                 <th className="py-3 px-4 text-left">Time</th>
-                <th className="py-3 px-4 text-left">Current Status</th>
+                <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-left">Actions</th>
               </tr>
             </thead>
@@ -383,6 +403,16 @@ const handleDelete = async (id) => {
                           </button>
                         )}
                         <button
+                          onClick={() => {
+                            setRescheduleBooking(b);
+                            setNewDate(b.date.split('T')[0]);
+                            setNewTime(b.time);
+                          }}
+                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-transform transform hover:scale-105"
+                        >
+                          Reschedule
+                        </button>
+                        <button
                           onClick={() => handleDelete(b._id)}
                           className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-transform transform hover:scale-105"
                         >
@@ -396,6 +426,72 @@ const handleDelete = async (id) => {
             </tbody>
           </table>
         </div>
+
+        {/* Reschedule Modal */}
+        {rescheduleBooking && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-bold mb-4 dark:text-white">
+                Reschedule Appointment for {rescheduleBooking.name}
+              </h2>
+              
+              <div className="mb-4">
+                <label className="block text-sm mb-2 dark:text-white">New Date</label>
+                <input
+                  type="date"
+                  value={newDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  className="w-full p-2 border rounded-lg dark:bg-gray-600 dark:border-gray-500"
+                />
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm mb-2 dark:text-white">New Time</label>
+                <input
+                  type="time"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  className="w-full p-2 border rounded-lg dark:bg-gray-600 dark:border-gray-500"
+                />
+              </div>
+              
+              {rescheduleError && (
+                <div className="mb-4 text-red-500 text-sm">{rescheduleError}</div>
+              )}
+              
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setRescheduleBooking(null);
+                    setRescheduleError("");
+                  }}
+                  className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg"
+                  disabled={isRescheduling}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleReschedule}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center"
+                  disabled={isRescheduling}
+                >
+                  {isRescheduling ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
