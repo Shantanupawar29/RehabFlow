@@ -9,7 +9,15 @@ const bookingRoutes = require('./routes/bookingRoutes');
 
 const app = express();
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({
+  origin: "https://rehabflow-frontend.onrender.com",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+// Test route - verify backend is working
+app.get("/api/test", (req, res) => {
+  res.json({ status: "Backend is working!" });
+});
 
 // MongoDB Connection (local or Atlas)
 mongoose.connect(process.env.MONGO_URI)

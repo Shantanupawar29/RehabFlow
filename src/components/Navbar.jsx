@@ -52,6 +52,7 @@ export default function Navbar() {
   onSuggestionSelect={(suggestion) => console.log("Selected:", suggestion)} 
 />
       </div>
+      
           {/* Language Selector + Date */}
           <div className="hidden md:flex items-center gap-4">
             <select

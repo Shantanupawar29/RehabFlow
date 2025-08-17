@@ -9,15 +9,20 @@ import Footer from "./components/Footer";
 import { SearchProvider } from "./context/SearchContext";
 import AISearchBox from "./components/AISearchBox";
 import AdminDashboard from "./Pages/AdminDashboard";
-
+import SearchBar from "./components/SearchBar";
+import SearchResults from "./components/SearchResults";
 function PublicLayout({ children }) {
   return (
+
     <div className="flex flex-col min-h-screen">
       <Navbar />
+     
       <main className="flex-grow">{children}</main>
-      <AISearchBox />
+  
       <Footer />
+      
     </div>
+    
   );
 }
 
